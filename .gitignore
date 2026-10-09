@@ -1,0 +1,8 @@
+# Dataset (537 MB): no se versiona
+*.csv
+
+# Ejecutables
+servidor_fifo
+cliente_fifo
+servidor_shm
+cliente_shm
