@@ -72,12 +72,12 @@ int main(int argc, char *argv[])
 
         printf("Consulta: entidad='%s' fecha='%s' municipio='%s'\n",
                reg->sol.entidad, reg->sol.fecha, reg->sol.municipio);
-        reg->total = buscar(ruta, &reg->sol, reg->lineas);
+        int fallo = buscar(ruta, &reg->sol, &reg->res) == -1;
         if (terminar) /* búsqueda interrumpida: no hay respuesta válida */
             break;
-        if (reg->total == -1)
+        if (fallo)
             perror(ruta);
-        reg->estado = reg->total == -1 ? RESPUESTA_ERROR : RESPUESTA_LISTA;
+        reg->estado = fallo ? RESPUESTA_ERROR : RESPUESTA_LISTA;
 
         /* Solo ahora, con la respuesta completa, se despierta al cliente */
         if (sem_post(&reg->sem_respuesta) == -1) {

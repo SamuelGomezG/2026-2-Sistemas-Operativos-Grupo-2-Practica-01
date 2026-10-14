@@ -63,49 +63,51 @@ static inline int coincide(const char *linea, const struct solicitud *sol) {
     return 1;
 }
 
-/* Recorre el CSV completo desde disco, línea por línea. Copia en `lineas`
- * los primeros MAX_RESULTADOS registros coincidentes y devuelve el total
- * de coincidencias, o -1 si el archivo no se pudo leer. Si llega una señal
- * de terminación abandona el recorrido (quien llama debe revisar `terminar`).
+/* Recorre el CSV completo desde disco, línea por línea. Copia en
+ * `res->lineas` los primeros MAX_RESULTADOS registros coincidentes y deja en
+ * `res->total` el número de coincidencias. Devuelve 0, o -1 si el archivo no
+ * se pudo leer. Si llega una señal de terminación abandona el recorrido
+ * (quien llama debe revisar `terminar`).
  * En memoria solo hay una línea a la vez (el buffer de getline). */
-static inline long buscar(const char *ruta, const struct solicitud *sol,
-                          char lineas[][MAX_LINEA])
+static inline int buscar(const char *ruta, const struct solicitud *sol,
+                         struct resultado *res)
 {
     FILE *archivo = fopen(ruta, "r");
     char *linea = NULL; /* buffer dinámico que reserva getline() */
     size_t capacidad = 0;
-    long total = 0;
+    int estado = 0;
 
+    res->total = 0;
     if (archivo == NULL)
         return -1;
 
     /* El primer getline lee el encabezado, que se descarta */
     if (getline(&linea, &capacidad, archivo) == -1)
-        total = -1;
+        estado = -1;
 
-    while (total != -1 && !terminar && getline(&linea, &capacidad, archivo) != -1) {
+    while (estado != -1 && !terminar && getline(&linea, &capacidad, archivo) != -1) {
         if (!coincide(linea, sol))
             continue;
 
-        if (total < MAX_RESULTADOS) {
+        if (res->total < MAX_RESULTADOS) {
             /* Quita el salto de línea final (\n o \r\n): strcspn() da la
              * posición del primer \r o \n, y ahí se pone el fin de cadena */
             linea[strcspn(linea, "\r\n")] = '\0';
-            snprintf(lineas[total], MAX_LINEA, "%s", linea);
+            snprintf(res->lineas[res->total], MAX_LINEA, "%s", linea);
         }
 
-        total++;
+        res->total++;
     }
 
     if (ferror(archivo))
-        total = -1;
+        estado = -1;
 
     free(linea);
 
     if (fclose(archivo) == EOF)
-        total = -1;
+        estado = -1;
 
-    return total;
+    return estado;
 }
 
 #endif

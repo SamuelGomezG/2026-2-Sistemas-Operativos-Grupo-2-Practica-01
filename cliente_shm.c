@@ -64,11 +64,11 @@ int main(void)
         }
 
         int mostrados = 0;
-        while (mostrados < reg->total && mostrados < MAX_RESULTADOS) {
-            imprimir_registro(mostrados + 1, reg->lineas[mostrados]);
+        while (mostrados < reg->res.total && mostrados < MAX_RESULTADOS) {
+            imprimir_registro(mostrados + 1, reg->res.lineas[mostrados]);
             mostrados++;
         }
-        imprimir_fin(reg->total, mostrados);
+        imprimir_fin(reg->res.total, mostrados);
     }
 
     if (munmap(reg, sizeof *reg) == -1)

@@ -18,7 +18,7 @@ static int enviar(int fd, const struct respuesta *resp)
  * Devuelve 1 si el servidor debe seguir esperando clientes y 0 si no. */
 static int atender(int fd_sol, int fd_resp, const char *ruta)
 {
-    static char lineas[MAX_RESULTADOS][MAX_LINEA];
+    static struct resultado res; /* static: ocupa ~10 KB, mejor fuera de la pila */
     struct solicitud sol;
     struct respuesta resp;
 
@@ -41,25 +41,25 @@ static int atender(int fd_sol, int fd_resp, const char *ruta)
 
         printf("Consulta: entidad='%s' fecha='%s' municipio='%s'\n",
                sol.entidad, sol.fecha, sol.municipio);
-        long total = buscar(ruta, &sol, lineas);
+        int fallo = buscar(ruta, &sol, &res) == -1;
         int ok = 1;
 
         if (terminar) /* búsqueda interrumpida: el cliente verá EOF */
             return 0;
 
         memset(&resp, 0, sizeof resp);
-        if (total == -1) {
+        if (fallo) {
             perror(ruta);
             resp.tipo = ERROR;
             ok = enviar(fd_resp, &resp);
         } else {
             resp.tipo = REGISTRO;
-            for (long i = 0; ok && i < total && i < MAX_RESULTADOS; i++) {
-                snprintf(resp.linea, sizeof resp.linea, "%s", lineas[i]);
+            for (long i = 0; ok && i < res.total && i < MAX_RESULTADOS; i++) {
+                snprintf(resp.linea, sizeof resp.linea, "%s", res.lineas[i]);
                 ok = enviar(fd_resp, &resp);
             }
             resp.tipo = FIN;
-            resp.total = total;
+            resp.total = res.total;
             ok = ok && enviar(fd_resp, &resp);
         }
         if (!ok) { /* EPIPE: el cliente ya no está leyendo */

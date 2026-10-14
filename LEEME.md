@@ -109,13 +109,14 @@ POSIX sin nombre guardados dentro de la misma región (`sem_init` con
 `pshared = 1`), ambos iniciados en 0.
 
 **Estructura** (`struct region`, 10 368 bytes): `sem_solicitud`,
-`sem_respuesta`, `estado`, la solicitud (`sol`), `total` y `lineas[20][512]`.
+`sem_respuesta`, `estado`, la solicitud (`sol`) y el resultado (`res`, con
+`total` y `lineas[20][512]`).
 
 **Protocolo:**
 
 1. El cliente escribe la solicitud en `sol` y hace `sem_post(sem_solicitud)`.
 2. El servidor, que dormía en `sem_wait(sem_solicitud)`, recorre el CSV, llena
-   `lineas` y `total`, pone `estado` (`RESPUESTA_LISTA` o `RESPUESTA_ERROR`) y
+   `res.lineas` y `res.total`, pone `estado` (`RESPUESTA_LISTA` o `RESPUESTA_ERROR`) y
    solo entonces hace `sem_post(sem_respuesta)`.
 3. El cliente, que dormía en `sem_wait(sem_respuesta)`, lee la respuesta.
 
@@ -128,8 +129,8 @@ un último `sem_post(sem_respuesta)` para que el cliente no quede esperando.
   intermediario y bloquea al lector hasta que haya datos. En memoria compartida
   ambos procesos leen y escriben las mismas páginas sin pasar por el kernel, así
   que nada le indica a uno cuándo terminó el otro.
-- *Condición de carrera sin semáforos:* el cliente podría leer `lineas` y
-  `total` mientras el servidor aún los escribe (respuesta a medias o de la
+- *Condición de carrera sin semáforos:* el cliente podría leer `res.lineas` y
+  `res.total` mientras el servidor aún los escribe (respuesta a medias o de la
   consulta anterior), o el servidor podría leer criterios a medio escribir.
   Aquí se evita porque en cada momento solo un proceso tiene "el turno": el
   cliente escribe mientras el servidor duerme en `sem_solicitud`, y el servidor

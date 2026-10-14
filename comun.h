@@ -38,6 +38,13 @@ struct solicitud {
     char municipio[MAX_CAMPO];
 };
 
+/* Resultado de una búsqueda en el CSV: cuántos registros coincidieron en
+ * total y una copia de los primeros MAX_RESULTADOS. */
+struct resultado {
+    long total;
+    char lineas[MAX_RESULTADOS][MAX_LINEA];
+};
+
 /* ---------- Parte A: mensajes de la FIFO de respuesta ---------- */
 
 /* Por cada consulta el servidor envía de 0 a MAX_RESULTADOS mensajes
@@ -62,8 +69,7 @@ struct region {
     sem_t sem_respuesta; /* el servidor avisa que la respuesta está completa */
     int estado;
     struct solicitud sol;
-    long total; /* total de registros coincidentes */
-    char lineas[MAX_RESULTADOS][MAX_LINEA];
+    struct resultado res;
 };
 
 /* ---------- Utilidades ---------- */
