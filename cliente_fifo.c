@@ -44,7 +44,7 @@ int main(void)
         return 1;
     }
 
-    for (;;) {
+    while (1) {
         struct solicitud sol = leer_solicitud();
 
         if (write(fd_sol, &sol, sizeof sol) != (ssize_t)sizeof sol) {

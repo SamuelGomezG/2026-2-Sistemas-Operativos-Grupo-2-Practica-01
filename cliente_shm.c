@@ -34,7 +34,7 @@ int main(void)
     while (sem_trywait(&reg->sem_respuesta) == 0)
         ;
 
-    for (;;) {
+    while (1) {
         /* La solicitud se arma primero en una variable local y se copia a la
          * región de una sola vez. Es seguro: el servidor no la lee hasta que
          * se haga el sem_post. */
