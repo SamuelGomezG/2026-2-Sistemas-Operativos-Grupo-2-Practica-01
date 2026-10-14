@@ -5,9 +5,9 @@ comandos) y un servidor (acceso al CSV) se ejecutan como procesos independientes
 y se comunican de dos formas: con **FIFO** (parte A) y con **memoria compartida
 y semáforos POSIX** (parte B). El usuario ve lo mismo en ambas versiones.
 
-Integrantes: Samuel Gomez
-	     Maikol Ovalle
-	     Leiner Agudelo
+Integrantes: Samuel Gomez,
+	     Maikol Ovalle,
+	     Leiner Agudelo,
 
 ## 1. Dataset
 
