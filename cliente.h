@@ -72,24 +72,26 @@ static inline struct solicitud leer_solicitud(void)
     return sol;
 }
 
+/* Columnas del CSV que se muestran de cada registro, con su etiqueta */
+static const struct {
+    int columna;
+    const char *nombre;
+} campos_registro[] = {
+    { 3, "Entidad" },          { COL_FECHA, "Fecha de corte" }, { COL_MUNICIPIO, "Municipio" },
+    { 8, "Tipo de crédito" },  { 10, "Producto" },              { 11, "Plazo" },
+    { 12, "Tasa efectiva %" }, { 14, "Monto" },                 { 15, "Créditos" },
+};
+
 /* Imprime los campos más relevantes de una línea del CSV */
 static inline void imprimir_registro(int numero, const char *linea)
 {
-    static const struct {
-        int columna;
-        const char *nombre;
-    } campos[] = {
-        { 3, "Entidad" },          { 4, "Fecha de corte" }, { 22, "Municipio" },
-        { 8, "Tipo de crédito" },  { 10, "Producto" },      { 11, "Plazo" },
-        { 12, "Tasa efectiva %" }, { 14, "Monto" },         { 15, "Créditos" },
-    };
     char valor[128];
 
     printf("\n--- Registro %d ---\n", numero);
 
-    for (size_t i = 0; i < sizeof campos / sizeof campos[0]; i++) {
-        campo(linea, campos[i].columna, valor, sizeof valor);
-        printf("  %s: %s\n", campos[i].nombre, valor);
+    for (size_t i = 0; i < sizeof campos_registro / sizeof campos_registro[0]; i++) {
+        campo(linea, campos_registro[i].columna, valor, sizeof valor);
+        printf("  %s: %s\n", campos_registro[i].nombre, valor);
     }
 }
 
