@@ -70,37 +70,41 @@ struct region {
 
 /* Copia en `salida` el campo número `n` de una línea CSV. Las comas que
  * están dentro de comillas (ej. "500,000,000") no separan campos. */
-static inline void campo(const char *linea, int n, char *salida, size_t tam)
-{
+static inline void campo(const char *linea, int n, char *salida, size_t tam) {
     int en_comillas = 0;
     size_t j = 0;
 
     for (const char *p = linea; *p && *p != '\n' && *p != '\r'; p++) {
         if (*p == '"') {
             en_comillas = !en_comillas;
-        } else if (*p == ',' && !en_comillas) {
+        }
+        else if (*p == ',' && !en_comillas) {
             if (n-- == 0) /* terminó el campo buscado */
                 break;
-        } else if (n == 0 && j + 1 < tam) {
+        }
+        else if (n == 0 && j + 1 < tam) {
             salida[j++] = *p;
         }
     }
+
     salida[j] = '\0';
 }
 
 /* Lee exactamente `n` bytes, porque read() puede entregar menos de los
  * pedidos. Devuelve 1 si leyó todo, 0 si el otro extremo cerró (EOF)
  * y -1 si hubo error. */
-static inline int leer_todo(int fd, void *buf, size_t n)
-{
+static inline int leer_todo(int fd, void *buf, size_t n) {
     size_t leidos = 0;
 
     while (leidos < n) {
         ssize_t r = read(fd, (char *)buf + leidos, n - leidos);
+        
         if (r <= 0)
             return (int)r;
+        
         leidos += (size_t)r;
     }
+    
     return 1;
 }
 

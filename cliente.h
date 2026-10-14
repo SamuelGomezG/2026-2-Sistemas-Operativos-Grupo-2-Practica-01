@@ -19,6 +19,7 @@ static inline void leer_texto(const char *mensaje, char *destino, size_t tam)
     fflush(stdout);
     if (fgets(buf, sizeof buf, stdin) == NULL)
         buf[0] = '\0';
+
     buf[strcspn(buf, "\r\n")] = '\0';
     snprintf(destino, tam, "%s", buf);
 }
@@ -65,6 +66,7 @@ static inline void imprimir_registro(int numero, const char *linea)
     char valor[128];
 
     printf("\n--- Registro %d ---\n", numero);
+
     for (size_t i = 0; i < sizeof campos / sizeof campos[0]; i++) {
         campo(linea, campos[i].columna, valor, sizeof valor);
         printf("  %s: %s\n", campos[i].nombre, valor);

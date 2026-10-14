@@ -15,8 +15,7 @@
 /* La pone en 1 el manejador de señales para pedir una salida ordenada */
 static volatile sig_atomic_t terminar = 0;
 
-static void manejar_senal(int senal)
-{
+static void manejar_senal(int senal) {
     (void)senal;
     terminar = 1;
 }
@@ -26,20 +25,20 @@ static void manejar_senal(int senal)
  * llamadas bloqueadas (open, read, sem_wait) retornan con EINTR.
  * SIGPIPE se ignora para que escribir a una FIFO sin lector devuelva
  * el error EPIPE en vez de matar al proceso. */
-static inline int instalar_senales(void)
-{
+static inline int instalar_senales(void) {
     struct sigaction sa;
 
     memset(&sa, 0, sizeof sa);
     sa.sa_handler = manejar_senal;
+
     if (sigaction(SIGINT, &sa, NULL) == -1 || sigaction(SIGTERM, &sa, NULL) == -1)
         return -1;
+    
     return signal(SIGPIPE, SIG_IGN) == SIG_ERR ? -1 : 0;
 }
 
 /* Indica si una línea del CSV cumple todos los criterios no vacíos */
-static inline int coincide(const char *linea, const struct solicitud *sol)
-{
+static inline int coincide(const char *linea, const struct solicitud *sol) {
     const char *criterios[] = { sol->entidad, sol->fecha, sol->municipio };
     const int columnas[] = { COL_ENTIDAD, COL_FECHA, COL_MUNICIPIO };
     char valor[MAX_CAMPO];
@@ -47,10 +46,13 @@ static inline int coincide(const char *linea, const struct solicitud *sol)
     for (int i = 0; i < 3; i++) {
         if (criterios[i][0] == '\0')
             continue;
+
         campo(linea, columnas[i], valor, sizeof valor);
+
         if (strcmp(valor, criterios[i]) != 0)
             return 0;
     }
+
     return 1;
 }
 
@@ -73,21 +75,27 @@ static inline long buscar(const char *ruta, const struct solicitud *sol,
     /* El primer getline lee el encabezado, que se descarta */
     if (getline(&linea, &capacidad, archivo) == -1)
         total = -1;
+
     while (total != -1 && !terminar && getline(&linea, &capacidad, archivo) != -1) {
         if (!coincide(linea, sol))
             continue;
+
         if (total < MAX_RESULTADOS) {
             linea[strcspn(linea, "\r\n")] = '\0';
             snprintf(lineas[total], MAX_LINEA, "%s", linea);
         }
+
         total++;
     }
+
     if (ferror(archivo))
         total = -1;
 
     free(linea);
+
     if (fclose(archivo) == EOF)
         total = -1;
+
     return total;
 }
 
