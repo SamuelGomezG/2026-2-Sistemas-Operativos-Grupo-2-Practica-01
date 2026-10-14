@@ -10,7 +10,6 @@
 
 int main(void)
 {
-    struct solicitud sol;
     struct respuesta resp;
     int estado = 0;
 
@@ -46,7 +45,8 @@ int main(void)
     }
 
     for (;;) {
-        leer_solicitud(&sol);
+        struct solicitud sol = leer_solicitud();
+
         if (write(fd_sol, &sol, sizeof sol) != (ssize_t)sizeof sol) {
             perror("No se pudo enviar la solicitud (¿servidor ausente?)");
             estado = 1;

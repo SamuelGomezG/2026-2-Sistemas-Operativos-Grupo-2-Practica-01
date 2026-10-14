@@ -24,32 +24,52 @@ static inline void leer_texto(const char *mensaje, char *destino, size_t tam)
     snprintf(destino, tam, "%s", buf);
 }
 
-/* Muestra el menú y llena la solicitud con lo que elija el usuario.
- * Si se cierra la entrada estándar (Ctrl+D) se toma como "terminar". */
-static inline void leer_solicitud(struct solicitud *sol)
+/* Muestra el menú hasta que el usuario elija una opción válida y devuelve
+ * CONSULTA o TERMINAR. Si se cierra la entrada estándar (Ctrl+D) se toma
+ * como "terminar". */
+static inline int leer_tipo(void)
 {
     char opcion[8];
 
-    memset(sol, 0, sizeof *sol);
-    for (;;) {
+    while (1) {
         printf("\n=== Tasas de interés activas por tipo de crédito ===\n"
                "1. Consultar registros\n"
                "2. Terminar cliente y servidor\n");
+
         leer_texto("Opción: ", opcion, sizeof opcion);
-        if (opcion[0] == '2' || feof(stdin)) {
-            sol->tipo = TERMINAR;
-            return;
-        }
+
+        /* Se revisa primero el fin de entrada: una "1" sin salto de línea
+         * final también deja la entrada en EOF y debe terminar */
+        if (opcion[0] == '2' || feof(stdin))
+            return TERMINAR;
+
         if (opcion[0] == '1')
-            break;
+            return CONSULTA;
+
         printf("Opción inválida.\n");
     }
+}
 
-    sol->tipo = CONSULTA;
+/* Pide los criterios de búsqueda y los guarda en `sol`.
+ * Un criterio vacío significa "cualquiera". */
+static inline void leer_criterios(struct solicitud *sol)
+{
     printf("Deje un criterio vacío para no filtrar por él.\n");
     leer_texto("Código de entidad (ej. 7 = Bancolombia): ", sol->entidad, MAX_CAMPO);
     leer_texto("Fecha de corte (dd/mm/aaaa): ", sol->fecha, MAX_CAMPO);
     leer_texto("Código de municipio (ej. 11001 = Bogotá): ", sol->municipio, MAX_CAMPO);
+}
+
+/* Arma la solicitud con lo que elija el usuario */
+static inline struct solicitud leer_solicitud(void)
+{
+    struct solicitud sol = { 0 };
+
+    sol.tipo = leer_tipo();
+    if (sol.tipo == CONSULTA)
+        leer_criterios(&sol);
+
+    return sol;
 }
 
 /* Imprime los campos más relevantes de una línea del CSV */

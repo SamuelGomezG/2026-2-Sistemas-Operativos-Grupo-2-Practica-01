@@ -35,9 +35,10 @@ int main(void)
         ;
 
     for (;;) {
-        /* La solicitud se escribe directamente en la región. Es seguro:
-         * el servidor no la lee hasta que se haga el sem_post. */
-        leer_solicitud(&reg->sol);
+        /* La solicitud se arma primero en una variable local y se copia a la
+         * región de una sola vez. Es seguro: el servidor no la lee hasta que
+         * se haga el sem_post. */
+        reg->sol = leer_solicitud();
         if (sem_post(&reg->sem_solicitud) == -1) {
             perror("sem_post");
             estado = 1;
