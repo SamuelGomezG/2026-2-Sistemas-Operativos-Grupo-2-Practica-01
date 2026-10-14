@@ -72,17 +72,23 @@ struct region {
  * están dentro de comillas (ej. "500,000,000") no separan campos. */
 static inline void campo(const char *linea, int n, char *salida, size_t tam) {
     int en_comillas = 0;
+    int columna = 0; // columna en la que estamos parados (la primera es 0)
     size_t j = 0;
 
+    /* Recorre los caracteres de UNA sola línea de izquierda a derecha,
+     * hasta su salto de línea o su final. Solo se copian los
+     * caracteres que caen dentro de la columna pedida (`columna == n`). */
     for (const char *p = linea; *p && *p != '\n' && *p != '\r'; p++) {
         if (*p == '"') {
             en_comillas = !en_comillas;
         }
         else if (*p == ',' && !en_comillas) {
-            if (n-- == 0) /* terminó el campo buscado */
+            if (columna == n) // terminó el campo buscado
                 break;
+
+            columna++;
         }
-        else if (n == 0 && j + 1 < tam) {
+        else if (columna == n && j + 1 < tam) {
             salida[j++] = *p;
         }
     }
