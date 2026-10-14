@@ -21,7 +21,7 @@ static void manejar_senal(int senal) {
 }
 
 /* SIGINT (Ctrl+C) y SIGTERM solo marcan la bandera, para que el servidor
- * alcance a liberar sus recursos IPC. No se usa SA_RESTART: así las
+ * alcance a liberar sus recursos IPC. No se usa SA_RESTART: así, las
  * llamadas bloqueadas (open, read, sem_wait) retornan con EINTR.
  * SIGPIPE se ignora para que escribir a una FIFO sin lector devuelva
  * el error EPIPE en vez de matar al proceso. */
@@ -31,9 +31,14 @@ static inline int instalar_senales(void) {
     memset(&sa, 0, sizeof sa);
     sa.sa_handler = manejar_senal;
 
+    /* Se registra el mismo manejador para Ctrl+C (SIGINT) y para `kill`
+     * (SIGTERM). sigaction() devuelve -1 si no pudo instalarlo. */
     if (sigaction(SIGINT, &sa, NULL) == -1 || sigaction(SIGTERM, &sa, NULL) == -1)
         return -1;
     
+    /* Con SIG_IGN el kernel descarta SIGPIPE; así, escribir en una FIFO sin
+     * lector falla con EPIPE en vez de terminar el proceso. signal() devuelve
+     * SIG_ERR si falla, y aquí se traduce a -1 / 0 */
     return signal(SIGPIPE, SIG_IGN) == SIG_ERR ? -1 : 0;
 }
 
@@ -49,6 +54,8 @@ static inline int coincide(const char *linea, const struct solicitud *sol) {
 
         campo(linea, columnas[i], valor, sizeof valor);
 
+        /* Los criterios se combinan con Y: basta uno que no coincida para
+         * descartar la línea sin revisar los demás */
         if (strcmp(valor, criterios[i]) != 0)
             return 0;
     }
@@ -81,6 +88,8 @@ static inline long buscar(const char *ruta, const struct solicitud *sol,
             continue;
 
         if (total < MAX_RESULTADOS) {
+            /* Quita el salto de línea final (\n o \r\n): strcspn() da la
+             * posición del primer \r o \n, y ahí se pone el fin de cadena */
             linea[strcspn(linea, "\r\n")] = '\0';
             snprintf(lineas[total], MAX_LINEA, "%s", linea);
         }
